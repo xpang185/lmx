@@ -1,0 +1,14 @@
+classify - Classify text into one of a supplied set of labels
+
+Usage: classify [OPTIONS] [INPUT]
+
+Input can be provided as an argument or piped via stdin.
+
+Options:
+  --labels <string>    Comma-separated list of allowed labels (default: positive,negative,neutral)
+  --format <string>    Output format Options: label, json. (default: label)
+  --instructions <string>    Additional classification instructions
+  --model <provider/id>   Override the LLM model
+  --temperature <float>   Override temperature
+  --verbose               Show runner diagnostics on stderr
+  --help                  Show this help text

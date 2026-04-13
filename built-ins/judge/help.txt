@@ -1,0 +1,11 @@
+judge - Evaluate candidate outputs against benchmark assertions
+
+Usage: judge [OPTIONS] [INPUT]
+
+Input can be provided as an argument or piped via stdin.
+
+Options:
+  --model <provider/id>   Override the LLM model
+  --temperature <float>   Override temperature
+  --verbose               Show runner diagnostics on stderr
+  --help                  Show this help text

@@ -1,0 +1,26 @@
+{
+  "name": "lmx",
+  "version": "0.1.0",
+  "description": "LLM executables powered by Pi",
+  "type": "module",
+  "bin": {
+    "lmx": "./dist/cli.js"
+  },
+  "scripts": {
+    "build": "tsc -p tsconfig.json && node scripts/copy-assets.mjs",
+    "dev": "tsx src/cli.ts",
+    "check": "tsc --noEmit",
+    "test": "npm run check"
+  },
+  "dependencies": {
+    "@mariozechner/pi-ai": "^0.66.1",
+    "@mariozechner/pi-coding-agent": "^0.66.1",
+    "yaml": "^2.8.1",
+    "zod": "^4.1.12"
+  },
+  "devDependencies": {
+    "@types/node": "^24.7.2",
+    "tsx": "^4.20.6",
+    "typescript": "^5.9.3"
+  }
+}

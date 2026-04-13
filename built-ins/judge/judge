@@ -1,0 +1,23 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+INVOKED_PATH="${BASH_SOURCE[0]}"
+INVOKE_DIR="$(cd -P "$(dirname "$INVOKED_PATH")" >/dev/null 2>&1 && pwd)"
+SOURCE="${BASH_SOURCE[0]}"
+while [ -L "$SOURCE" ]; do
+  DIR="$(cd -P "$(dirname "$SOURCE")" >/dev/null 2>&1 && pwd)"
+  TARGET="$(readlink "$SOURCE")"
+  if [[ "$TARGET" != /* ]]; then
+    SOURCE="$DIR/$TARGET"
+  else
+    SOURCE="$TARGET"
+  fi
+done
+PROGRAM_DIR="$(cd -P "$(dirname "$SOURCE")" >/dev/null 2>&1 && pwd)"
+RUNNER="$INVOKE_DIR/lmx"
+
+if [ -x "$RUNNER" ]; then
+  "$RUNNER" run "$PROGRAM_DIR" "$@"
+else
+  lmx run "$PROGRAM_DIR" "$@"
+fi

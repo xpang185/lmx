@@ -1,0 +1,7 @@
+name: "judge"
+description: "Evaluate candidate outputs against benchmark assertions"
+version: "0.1.0"
+default_model: "openai-codex/gpt-5.4"
+tools:
+  - "none"
+params: {}

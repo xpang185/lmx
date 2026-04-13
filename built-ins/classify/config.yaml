@@ -1,0 +1,22 @@
+name: "classify"
+description: "Classify text into one of a supplied set of labels"
+version: "0.1.0"
+default_model: "openai-codex/gpt-5.4"
+min_bench_score: 0.8
+tools:
+  - "none"
+params:
+  labels:
+    description: "Comma-separated list of allowed labels"
+    type: "string"
+    default: "positive,negative,neutral"
+  format:
+    description: "Output format"
+    type: "string"
+    enum:
+      - "label"
+      - "json"
+    default: "label"
+  instructions:
+    description: "Additional classification instructions"
+    type: "string"

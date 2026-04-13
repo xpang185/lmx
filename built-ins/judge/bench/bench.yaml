@@ -1,0 +1,12 @@
+tests:
+  - name: "json-shape-smoke"
+    input: |
+      {
+        "input": "The sky is blue.",
+        "candidate_output": "The sky is blue.",
+        "assertions": [
+          { "factual_to_input": true }
+        ]
+      }
+    assert:
+      - contains: "\"results\""

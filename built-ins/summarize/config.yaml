@@ -1,0 +1,23 @@
+name: "summarize"
+description: "Summarize text or documents concisely"
+version: "0.1.0"
+default_model: "openai-codex/gpt-5.4"
+min_bench_score: 0.8
+tools:
+  - "none"
+params:
+  max-chars:
+    description: "Maximum characters in the summary output"
+    type: "number"
+    default: 500
+  format:
+    description: "Output format"
+    type: "string"
+    enum:
+      - "paragraph"
+      - "bullets"
+      - "oneliner"
+    default: "paragraph"
+  instructions:
+    description: "Additional instructions for the summarization"
+    type: "string"

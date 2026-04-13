@@ -1,0 +1,16 @@
+runs: 1
+tests:
+  - name: "positive-sentiment"
+    input: "I loved the new release. It was fast, clear, and reliable."
+    params:
+      labels: "positive,negative,neutral"
+    assert:
+      - contains: "positive"
+  - name: "json-format"
+    input: "This was disappointing and buggy."
+    params:
+      labels: "positive,negative,neutral"
+      format: "json"
+    assert:
+      - contains: "\"label\""
+      - matches_regex: "negative"
