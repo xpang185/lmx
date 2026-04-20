@@ -37,6 +37,8 @@ Or:
 npm run dev -- --help
 ```
 
+Built-in shims can also be run directly from the repo after `npm run build`; they will resolve the local runner without requiring a globally installed `lmx`.
+
 ## Notes
 
 - npm publishing: TBD
