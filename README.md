@@ -37,23 +37,9 @@ Or:
 npm run dev -- --help
 ```
 
-## Install built-ins onto your PATH
-
-```bash
-node dist/cli.js install summarize
-```
-
-Install all available programs:
-
-```bash
-node dist/cli.js install --all
-```
-
-This writes launcher scripts into your configured `bin_dir`.
-
 ## Notes
 
 - npm publishing: TBD
-- `lmx install` writes program launchers into `bin_dir` so installed programs can be invoked by name once that directory is on your PATH.
+- install pipeline: TBD
 - On Windows, Pi requires bash, so install Git Bash.
 - `lmx build` now generates both the Unix shim (`<program>`) and a Windows wrapper (`<program>.cmd`).

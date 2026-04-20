@@ -392,10 +392,6 @@ lmx create <name>
 # Build: generate help.txt, shim, validate config
 lmx build <name>
 
-# Install launchers into the configured bin dir
-lmx install <name|path>
-lmx install --all
-
 # Benchmark
 lmx bench <name>
 lmx bench <name> --model <provider/model>
@@ -404,7 +400,7 @@ lmx bench --all
 # Run directly (normally users just call the command by name)
 lmx run <program-dir> [args...]
 
-# List available programs
+# List installed programs
 lmx list
 ```
 
@@ -426,7 +422,7 @@ Future integration may expose installed LMX programs to other agents, keep tool 
 
 Bundled built-ins live inside the installed `lmx` package under `built-ins/`.
 Standalone LMX programs can also be distributed as their own npm packages.
-`lmx install` writes per-program launchers into the configured `bin_dir`, which the user can add to PATH.
+In both cases, npm owns executable installation onto PATH.
 ```
 
 ## Design Principles
