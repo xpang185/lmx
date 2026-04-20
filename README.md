@@ -37,11 +37,12 @@ Or:
 npm run dev -- --help
 ```
 
-Built-in shims can also be run directly from the repo after `npm run build`; they will resolve the local runner without requiring a globally installed `lmx`.
+For local development in the repo on Windows, `lmx.cmd` is available at the repo root after checkout, so `lmx ...` works from `cmd.exe` while your current directory is the repo root.
 
 ## Notes
 
 - npm publishing: TBD
 - install pipeline: TBD
 - On Windows, Pi requires bash, so install Git Bash.
-- `lmx build` now generates both the Unix shim (`<program>`) and a Windows wrapper (`<program>.cmd`).
+- `lmx build` generates both the Unix shim (`<program>`) and a Windows wrapper (`<program>.cmd`).
+- Built-in shims expect `lmx` to be invokable.
