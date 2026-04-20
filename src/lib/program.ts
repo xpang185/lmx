@@ -6,7 +6,7 @@ import { LmxError, EXIT_USAGE } from "./errors.js";
 import { type ProgramConfig, programConfigSchema } from "./schemas.js";
 import { loadRuntimeConfig, ensureRuntimeDirs, type RuntimeConfig } from "./global-config.js";
 import { getBuiltInProgramsDir, pathExists } from "./paths.js";
-import { generateShimScript } from "./shim.js";
+import { generateCmdShimScript, generateShimScript } from "./shim.js";
 import { parseYamlFile, stringifyYaml } from "./yaml.js";
 
 export interface LoadedProgram {
@@ -111,9 +111,11 @@ export async function buildProgram(programDir: string): Promise<LoadedProgram> {
   const program = await loadProgram(programDir);
   const helpText = await generateHelpText(programDir, program.config);
   const shimText = generateShimScript();
+  const cmdShimText = generateCmdShimScript();
 
   await writeFile(program.helpPath, helpText, "utf8");
   await writeFile(program.shimPath, shimText, "utf8");
+  await writeFile(`${program.shimPath}.cmd`, cmdShimText, "utf8");
   await chmod(program.shimPath, 0o755);
 
   return program;

@@ -3,6 +3,7 @@
 import { runBenchCommand } from "./commands/bench.js";
 import { runBuildCommand } from "./commands/build.js";
 import { runCreateCommand } from "./commands/create.js";
+import { runInstallCommand } from "./commands/install.js";
 import { runListCommand } from "./commands/list.js";
 import { runRunCommand } from "./commands/run.js";
 import { LmxError, EXIT_RUNTIME, EXIT_USAGE } from "./lib/errors.js";
@@ -17,6 +18,8 @@ Commands:
   bench <name> [--model provider/id]
   bench --all [--model provider/id]
   run <program-dir> [args...]
+  install <name|path>
+  install --all
   list
 `;
 }
@@ -41,6 +44,9 @@ async function main(): Promise<void> {
       return;
     case "run":
       await runRunCommand(args);
+      return;
+    case "install":
+      await runInstallCommand(args);
       return;
     case "list":
       await runListCommand(args);

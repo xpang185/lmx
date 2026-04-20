@@ -18,6 +18,8 @@ RUNNER="$INVOKE_DIR/lmx"
 
 if [ -x "$RUNNER" ]; then
   "$RUNNER" run "$PROGRAM_DIR" "$@"
-else
+elif command -v lmx >/dev/null 2>&1; then
   lmx run "$PROGRAM_DIR" "$@"
+else
+  npx --no-install lmx run "$PROGRAM_DIR" "$@"
 fi

@@ -56,3 +56,19 @@ export async function getBuiltInProgramsDir(): Promise<string> {
 
   throw new LmxError("Unable to locate bundled built-ins", EXIT_RUNTIME);
 }
+
+export async function getRunnerCliPath(): Promise<string> {
+  const moduleDir = path.dirname(fileURLToPath(import.meta.url));
+  const candidates = [
+    path.resolve(moduleDir, "../../dist/cli.js"),
+    path.resolve(moduleDir, "../cli.js"),
+  ];
+
+  for (const candidate of candidates) {
+    if (await pathExists(candidate)) {
+      return candidate;
+    }
+  }
+
+  throw new LmxError("Unable to locate built lmx CLI", EXIT_RUNTIME);
+}
