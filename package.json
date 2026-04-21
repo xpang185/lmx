@@ -4,7 +4,10 @@
   "description": "LLM executables powered by Pi",
   "type": "module",
   "bin": {
-    "lmx": "./dist/cli.js"
+    "lmx": "./dist/cli.js",
+    "judge": "./dist/built-ins/judge/_run.js",
+    "summarize": "./dist/built-ins/summarize/_run.js",
+    "classify": "./dist/built-ins/classify/_run.js"
   },
   "scripts": {
     "build": "tsc -p tsconfig.json && node scripts/copy-assets.mjs",

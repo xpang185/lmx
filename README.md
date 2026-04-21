@@ -16,13 +16,13 @@ All platforms:
 
 Windows:
 - Git Bash / Git for Windows: https://git-scm.com/download/win
-- Use the generated `*.cmd` wrappers when invoking built programs from Command Prompt or PowerShell.
 
 ## Setup
 
 ```bash
 npm install
 npm run build
+npm link
 ```
 
 ## Run
@@ -39,10 +39,12 @@ npm run dev -- --help
 
 For local development in the repo on Windows, `lmx.cmd` is available at the repo root after checkout, so `lmx ...` works from `cmd.exe` while your current directory is the repo root.
 
+After `npm link`, npm exposes `lmx` plus the bundled built-ins (`judge`, `summarize`, `classify`) as normal commands on your PATH.
+
 ## Notes
 
 - npm publishing: TBD
 - install pipeline: TBD
 - On Windows, Pi requires bash, so install Git Bash.
-- `lmx build` generates both the Unix shim (`<program>`) and a Windows wrapper (`<program>.cmd`).
-- Built-in shims expect `lmx` to be invokable.
+- `lmx build` validates the program and regenerates `help.txt` plus the program `_run.js` npm entrypoint.
+- npm owns PATH shims for `lmx` and bundled built-ins via `package.json#bin`.

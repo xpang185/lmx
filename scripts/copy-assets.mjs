@@ -7,10 +7,14 @@ const rootDir = path.resolve(scriptDir, "..");
 const sourceDir = path.join(rootDir, "built-ins");
 const targetDir = path.join(rootDir, "dist", "built-ins");
 const legacyTargetDir = path.join(rootDir, "dist", "built-in");
+const templatesSourceDir = path.join(rootDir, "src", "templates");
+const templatesTargetDir = path.join(rootDir, "dist", "templates");
 const cliPath = path.join(rootDir, "dist", "cli.js");
 
 await mkdir(path.dirname(targetDir), { recursive: true });
 await rm(targetDir, { recursive: true, force: true });
 await rm(legacyTargetDir, { recursive: true, force: true });
+await rm(templatesTargetDir, { recursive: true, force: true });
 await cp(sourceDir, targetDir, { recursive: true });
+await cp(templatesSourceDir, templatesTargetDir, { recursive: true });
 await chmod(cliPath, 0o755);

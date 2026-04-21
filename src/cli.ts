@@ -5,8 +5,8 @@ import { runBuildCommand } from "./commands/build.js";
 import { runCreateCommand } from "./commands/create.js";
 import { runListCommand } from "./commands/list.js";
 import { runRunCommand } from "./commands/run.js";
-import { LmxError, EXIT_RUNTIME, EXIT_USAGE } from "./lib/errors.js";
-import { writeStderr } from "./lib/io.js";
+import { LmxError, EXIT_USAGE } from "./lib/errors.js";
+import { runEntrypoint } from "./lib/entrypoint.js";
 
 function usage(): string {
   return `lmx <command> [args...]
@@ -50,17 +50,4 @@ async function main(): Promise<void> {
   }
 }
 
-try {
-  await main();
-} catch (error) {
-  if (error instanceof LmxError) {
-    writeStderr(error.message);
-    process.exitCode = error.exitCode;
-  } else if (error instanceof Error) {
-    writeStderr(error.message);
-    process.exitCode = EXIT_RUNTIME;
-  } else {
-    writeStderr(String(error));
-    process.exitCode = EXIT_RUNTIME;
-  }
-}
+await runEntrypoint(main);

@@ -1,12 +1,12 @@
-import { chmod, mkdir, readdir, readFile, stat, writeFile } from "node:fs/promises";
+import { copyFile, mkdir, readdir, readFile, stat, writeFile } from "node:fs/promises";
 import path from "node:path";
+import { fileURLToPath } from "node:url";
 
 import { generateHelpText } from "./help.js";
 import { LmxError, EXIT_USAGE } from "./errors.js";
 import { type ProgramConfig, programConfigSchema } from "./schemas.js";
 import { loadRuntimeConfig, ensureRuntimeDirs, type RuntimeConfig } from "./global-config.js";
 import { getBuiltInProgramsDir, pathExists } from "./paths.js";
-import { generateCmdShimScript, generateShimScript } from "./shim.js";
 import { parseYamlFile, stringifyYaml } from "./yaml.js";
 
 export interface LoadedProgram {
@@ -14,7 +14,7 @@ export interface LoadedProgram {
   configPath: string;
   promptPath: string;
   helpPath: string;
-  shimPath: string;
+  runnerPath: string;
   config: ProgramConfig;
   prompt: string;
 }
@@ -82,7 +82,7 @@ export async function loadProgram(programDir: string): Promise<LoadedProgram> {
   const configPath = path.join(programDir, "config.yaml");
   const promptPath = path.join(programDir, "LMX.md");
   const helpPath = path.join(programDir, "help.txt");
-  const shimPath = path.join(programDir, path.basename(programDir));
+  const runnerPath = path.join(programDir, "_run.js");
 
   if (!(await pathExists(configPath))) {
     throw new LmxError(`Missing config.yaml in ${programDir}`, EXIT_USAGE);
@@ -101,22 +101,22 @@ export async function loadProgram(programDir: string): Promise<LoadedProgram> {
     configPath,
     promptPath,
     helpPath,
-    shimPath,
+    runnerPath,
     config,
     prompt,
   };
 }
 
+function getProgramRunnerTemplatePath(): string {
+  return path.resolve(path.dirname(fileURLToPath(import.meta.url)), "../templates/program-runner.js");
+}
+
 export async function buildProgram(programDir: string): Promise<LoadedProgram> {
   const program = await loadProgram(programDir);
   const helpText = await generateHelpText(programDir, program.config);
-  const shimText = generateShimScript();
-  const cmdShimText = generateCmdShimScript();
 
   await writeFile(program.helpPath, helpText, "utf8");
-  await writeFile(program.shimPath, shimText, "utf8");
-  await writeFile(`${program.shimPath}.cmd`, cmdShimText, "utf8");
-  await chmod(program.shimPath, 0o755);
+  await copyFile(getProgramRunnerTemplatePath(), program.runnerPath);
 
   return program;
 }

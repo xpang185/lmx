@@ -9,12 +9,7 @@ function isBooleanLike(value: string): boolean {
   return value === "true" || value === "false";
 }
 
-export async function runRunCommand(args: string[]): Promise<void> {
-  const [programRef, ...invocationArgs] = args;
-  if (!programRef) {
-    throw new Error("Usage: lmx run <program-dir> [args...]");
-  }
-
+export async function runNamedProgramCommand(programRef: string, invocationArgs: string[]): Promise<void> {
   const runtime = await createRuntime();
   const programDir = await resolveProgramDir(programRef, runtime);
   const program = await loadProgram(programDir);
@@ -131,4 +126,13 @@ export async function runRunCommand(args: string[]): Promise<void> {
     writeStderr(result.stderr);
   }
   process.exitCode = result.exitCode;
+}
+
+export async function runRunCommand(args: string[]): Promise<void> {
+  const [programRef, ...invocationArgs] = args;
+  if (!programRef) {
+    throw new Error("Usage: lmx run <program-dir> [args...]");
+  }
+
+  await runNamedProgramCommand(programRef, invocationArgs);
 }
