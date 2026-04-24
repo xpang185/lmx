@@ -46,5 +46,5 @@ After `npm link`, npm exposes `lmx` plus the bundled built-ins (`judge`, `summar
 - npm publishing: TBD
 - install pipeline: TBD
 - On Windows, Pi requires bash, so install Git Bash.
-- `lmx build` validates the program and regenerates `help.txt` plus the program `_run.js` npm entrypoint.
+- `lmx build` validates the program and regenerates `_help.txt` plus the program `_run.js` npm entrypoint.
 - npm owns PATH shims for `lmx` and bundled built-ins via `package.json#bin`.

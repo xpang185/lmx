@@ -1,4 +1,4 @@
-import { copyFile, mkdir, readdir, readFile, stat, writeFile } from "node:fs/promises";
+import { copyFile, mkdir, readdir, readFile, rm, stat, writeFile } from "node:fs/promises";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 
@@ -81,7 +81,7 @@ export async function resolveProgramDir(ref: string, runtime: RuntimeConfig): Pr
 export async function loadProgram(programDir: string): Promise<LoadedProgram> {
   const configPath = path.join(programDir, "config.yaml");
   const promptPath = path.join(programDir, "LMX.md");
-  const helpPath = path.join(programDir, "help.txt");
+  const helpPath = path.join(programDir, "_help.txt");
   const runnerPath = path.join(programDir, "_run.js");
 
   if (!(await pathExists(configPath))) {
@@ -117,6 +117,7 @@ export async function buildProgram(programDir: string): Promise<LoadedProgram> {
 
   await writeFile(program.helpPath, helpText, "utf8");
   await copyFile(getProgramRunnerTemplatePath(), program.runnerPath);
+  await rm(path.join(program.dir, "help.txt"), { force: true });
 
   return program;
 }
