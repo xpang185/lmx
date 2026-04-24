@@ -1,6 +1,6 @@
 {
   "name": "@xpang/lmx",
-  "version": "0.1.1",
+  "version": "0.2.0",
   "description": "LLM executables powered by Pi",
   "type": "module",
   "repository": {
