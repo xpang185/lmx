@@ -26,8 +26,8 @@
     "test": "npm run check"
   },
   "dependencies": {
-    "@mariozechner/pi-ai": "^0.66.1",
-    "@mariozechner/pi-coding-agent": "^0.66.1",
+    "@mariozechner/pi-ai": "^0.70.2",
+    "@mariozechner/pi-coding-agent": "^0.70.2",
     "yaml": "^2.8.1",
     "zod": "^4.1.12"
   },

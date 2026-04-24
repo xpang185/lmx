@@ -115,7 +115,7 @@ process.stdout.write(output);
 │   ├── cases/          # YAML benchmark cases, optionally grouped by directory
 │   └── results/        # Per-model benchmark results
 │       ├── anthropic_claude-sonnet-4-6.yaml
-│       └── openai_gpt-5.4.yaml
+│       └── openai_gpt-5.5.yaml
 ├── scripts/            # Optional companion scripts
 │   └── preprocess.py
 └── ... other files
@@ -150,7 +150,7 @@ description: "Summarize text or documents concisely"
 version: "1.0.0"
 
 # Model configuration
-default_model: openai-codex/gpt-5.4
+default_model: openai-codex/gpt-5.5
 min_bench_score: 0.80
 
 # Tools this program needs
@@ -198,7 +198,7 @@ Options:
 
 Tested models:
   anthropic/claude-sonnet-4-6   score: 0.95 (recommended)
-  openai/gpt-5.4                score: 0.88
+  openai/gpt-5.5                score: 0.88
   google/gemini-2.5-pro         score: 0.82
 ```
 

@@ -1,4 +1,4 @@
-import { createReadTool, AuthStorage, createAgentSession, createBashTool, DefaultResourceLoader, ModelRegistry, SessionManager } from "@mariozechner/pi-coding-agent";
+import { AuthStorage, createAgentSession, DefaultResourceLoader, getAgentDir, ModelRegistry, SessionManager } from "@mariozechner/pi-coding-agent";
 
 import type { RuntimeConfig } from "./global-config.js";
 import { LmxError, EXIT_RUNTIME, EXIT_USAGE } from "./errors.js";
@@ -38,23 +38,12 @@ function parseModelRef(modelRef: string): { provider: string; modelId: string } 
   return { provider, modelId };
 }
 
-function resolveToolSet(program: LoadedProgram) {
+function resolveToolNames(program: LoadedProgram): string[] {
   if (program.config.tools.includes("none")) {
     return [];
   }
 
-  const tools = [];
-  for (const tool of program.config.tools) {
-    if (tool === "bash") {
-      tools.push(createBashTool(program.dir));
-    }
-
-    if (tool === "read") {
-      tools.push(createReadTool(program.dir));
-    }
-  }
-
-  return tools;
+  return program.config.tools;
 }
 
 function parseValueForParam(name: string, config: ParamConfig, raw: ParamValue): ParamValue {
@@ -195,9 +184,11 @@ export async function executeProgram(
   const params = resolveEffectiveParams(program, options.providedParams);
   const promptInput = composeInvocationContext(program, params, options.input);
   const { authStorage, modelRegistry, model, modelRef } = await resolveModel(program, runtime, options.modelOverride);
+  const agentDir = getAgentDir();
 
   const loader = new DefaultResourceLoader({
     cwd: program.dir,
+    agentDir,
     noExtensions: true,
     noSkills: true,
     noPromptTemplates: true,
@@ -221,13 +212,13 @@ export async function executeProgram(
   let stdout = "";
   const { session, modelFallbackMessage } = await createAgentSession({
     cwd: program.dir,
+    agentDir,
     authStorage,
     modelRegistry,
     model,
     resourceLoader: loader,
     sessionManager: SessionManager.inMemory(program.dir),
-    tools: resolveToolSet(program),
-    customTools: [],
+    tools: resolveToolNames(program),
   });
 
   session.subscribe((event) => {

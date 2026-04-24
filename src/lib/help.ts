@@ -59,6 +59,20 @@ export async function generateHelpText(programDir: string, config: ProgramConfig
 
   const benchSummaries = await loadBenchSummaries(programDir);
   if (benchSummaries.length > 0) {
+    benchSummaries.sort((left, right) => {
+      const scoreOrder = right.score - left.score;
+      if (scoreOrder !== 0) {
+        return scoreOrder;
+      }
+      if (left.model === config.default_model) {
+        return -1;
+      }
+      if (right.model === config.default_model) {
+        return 1;
+      }
+      return left.model.localeCompare(right.model);
+    });
+
     lines.push("");
     lines.push("Tested models:");
 
