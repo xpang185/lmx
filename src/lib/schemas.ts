@@ -69,48 +69,16 @@ export const programConfigSchema = z
     }
   });
 
-const deterministicAssertionSchema = z.union([
-  z.object({ contains: z.string() }),
-  z.object({ not_contains: z.string() }),
-  z.object({ max_chars: z.number().int().nonnegative() }),
-  z.object({ min_chars: z.number().int().nonnegative() }),
-  z.object({ max_lines: z.number().int().nonnegative() }),
-  z.object({ min_lines: z.number().int().nonnegative() }),
-  z.object({ matches_regex: z.string() }),
-  z.object({ exit_code: z.number().int() }),
-  z.object({ stderr_empty: z.boolean().optional().default(true) }),
-]);
+export const rubricSchema = z.object({
+  rubric: z.string().min(1),
+  positive_examples: z.array(z.string()).optional().default([]),
+  negative_examples: z.array(z.string()).optional().default([]),
+});
 
-const llmAssertionSchema = z.union([
-  z.object({ sentiment: z.enum(["positive", "negative", "neutral"]) }),
-  z.object({ topic_relevant: z.boolean().optional().default(true) }),
-  z.object({ factual_to_input: z.boolean().optional().default(true) }),
-  z.object({ language: z.string().min(1) }),
-]);
-
-export const assertionSchema = z.union([deterministicAssertionSchema, llmAssertionSchema]);
-
-export const benchTestSchema = z
-  .object({
-    name: z.string().min(1),
-    input: z.string().optional(),
-    input_file: z.string().optional(),
-    stdin: z.boolean().optional().default(false),
-    params: z.record(z.string(), z.union([z.string(), z.number(), z.boolean()])).optional().default({}),
-    assert: z.array(assertionSchema).min(1),
-  })
-  .superRefine((value, ctx) => {
-    if (!value.input && !value.input_file) {
-      ctx.addIssue({
-        code: z.ZodIssueCode.custom,
-        message: "each bench test needs either input or input_file",
-      });
-    }
-  });
-
-export const benchConfigSchema = z.object({
-  runs: z.number().int().positive().optional(),
-  tests: z.array(benchTestSchema).min(1),
+export const benchCaseSchema = z.object({
+  input: z.string().default(""),
+  args: z.string().optional().default(""),
+  rubrics: z.array(rubricSchema).min(1),
 });
 
 export const globalConfigSchema = z.object({
@@ -123,7 +91,6 @@ export const globalConfigSchema = z.object({
 
 export type ProgramConfig = z.infer<typeof programConfigSchema>;
 export type ParamConfig = z.infer<typeof paramConfigSchema>;
-export type BenchConfig = z.infer<typeof benchConfigSchema>;
-export type BenchTest = z.infer<typeof benchTestSchema>;
-export type Assertion = z.infer<typeof assertionSchema>;
+export type BenchCase = z.infer<typeof benchCaseSchema>;
+export type Rubric = z.infer<typeof rubricSchema>;
 export type GlobalConfig = z.infer<typeof globalConfigSchema>;

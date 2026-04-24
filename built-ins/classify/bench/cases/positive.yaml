@@ -1,0 +1,9 @@
+input: "I loved the new release. It was fast, clear, and reliable."
+args: "--labels positive,negative,neutral"
+
+rubrics:
+  - rubric: "the output is exactly the label positive"
+    positive_examples:
+      - "positive"
+    negative_examples:
+      - "negative"

@@ -1,0 +1,22 @@
+"model": "openai-codex/gpt-5.4"
+"timestamp": "2026-04-24T00:50:37.838Z"
+"runs": 3
+"cases":
+  "number-transposition":
+    "pass_rate": 1
+    "avg_latency_ms": 4381
+    "scores":
+      - 1
+      - 1
+      - 1
+    "rubrics":
+      - "rubric": "the output is exactly the string UNMET"
+        "verdicts":
+          - "MET"
+          - "MET"
+          - "MET"
+        "pass_rate": 1
+        "errors": []
+"overall":
+  "pass_rate": 1
+  "score": 1

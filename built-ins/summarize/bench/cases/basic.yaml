@@ -1,0 +1,11 @@
+input: |
+  The company reported Q3 revenue of $847M, up from $812M in Q2.
+  Headcount grew to 12,400 employees.
+args: "--instructions brief"
+
+rubrics:
+  - rubric: "the output captures the revenue change and headcount"
+    positive_examples:
+      - "Q3 revenue was $847M, up from $812M in Q2, with headcount at 12,400."
+    negative_examples:
+      - "The company reported growth."

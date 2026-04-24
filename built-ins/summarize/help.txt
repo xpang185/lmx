@@ -5,10 +5,11 @@ Usage: summarize [OPTIONS] [INPUT]
 Input can be provided as an argument or piped via stdin.
 
 Options:
-  --max-chars <number>    Maximum characters in the summary output (default: 500)
-  --format <string>    Output format Options: paragraph, bullets, oneliner. (default: paragraph)
   --instructions <string>    Additional instructions for the summarization
   --model <provider/id>   Override the LLM model
   --temperature <float>   Override temperature
   --verbose               Show runner diagnostics on stderr
   --help                  Show this help text
+
+Tested models:
+  openai-codex/gpt-5.4   score: 1.00 (recommended)

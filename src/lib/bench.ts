@@ -1,214 +1,304 @@
-import { mkdir, readFile, writeFile } from "node:fs/promises";
+import { mkdir, readdir, readFile, writeFile } from "node:fs/promises";
 import path from "node:path";
 
-import { LmxError, EXIT_RUNTIME, EXIT_USAGE } from "./errors.js";
+import { LmxError, EXIT_USAGE } from "./errors.js";
 import type { RuntimeConfig } from "./global-config.js";
 import { loadProgram, resolveProgramDir, type LoadedProgram } from "./program.js";
 import { executeProgram } from "./run-program.js";
-import { benchConfigSchema, type Assertion, type BenchConfig } from "./schemas.js";
+import { benchCaseSchema, type BenchCase, type Rubric } from "./schemas.js";
 import { pathExists } from "./paths.js";
 import { parseYamlFile, stringifyYaml } from "./yaml.js";
+
+type ParamValue = string | number | boolean;
 
 export interface BenchCommandOptions {
   modelOverride?: string;
 }
 
-interface SingleAssertionResult {
-  assertion: Assertion;
-  pass: boolean;
-  reason?: string;
+interface LoadedBenchCase {
+  name: string;
+  case: BenchCase;
 }
 
-interface ProgramRunResult {
-  stdout: string;
-  stderr: string;
-  exitCode: number;
+interface ParsedArgs {
+  providedParams: Record<string, ParamValue>;
+  positionals: string[];
 }
 
-interface JudgeResponse {
-  results: Array<{
-    assertion: string;
-    pass: boolean;
-    reason: string;
-  }>;
+interface RubricOutcome {
+  verdict: "MET" | "UNMET" | "ERROR";
+  error?: string;
 }
 
-function normalizeLineCount(output: string): number {
-  if (output.length === 0) {
-    return 0;
-  }
-  return output.split(/\r?\n/).length;
+function isBooleanLike(value: string): boolean {
+  return value === "true" || value === "false";
 }
 
-function evaluateDeterministicAssertion(assertion: Assertion, result: ProgramRunResult): SingleAssertionResult | undefined {
-  if ("contains" in assertion) {
-    return { assertion, pass: result.stdout.includes(assertion.contains) };
+function splitArgs(input: string): string[] {
+  const result: string[] = [];
+  let current = "";
+  let quote: "'" | '"' | undefined;
+  let escaping = false;
+
+  for (const char of input) {
+    if (escaping) {
+      current += char;
+      escaping = false;
+      continue;
+    }
+
+    if (char === "\\") {
+      escaping = true;
+      continue;
+    }
+
+    if (quote) {
+      if (char === quote) {
+        quote = undefined;
+      } else {
+        current += char;
+      }
+      continue;
+    }
+
+    if (char === "'" || char === '"') {
+      quote = char;
+      continue;
+    }
+
+    if (/\s/.test(char)) {
+      if (current.length > 0) {
+        result.push(current);
+        current = "";
+      }
+      continue;
+    }
+
+    current += char;
   }
-  if ("not_contains" in assertion) {
-    return { assertion, pass: !result.stdout.includes(assertion.not_contains) };
+
+  if (escaping) {
+    current += "\\";
   }
-  if ("max_chars" in assertion) {
-    return { assertion, pass: result.stdout.length <= assertion.max_chars };
+
+  if (quote) {
+    throw new LmxError("Unclosed quote in bench args", EXIT_USAGE);
   }
-  if ("min_chars" in assertion) {
-    return { assertion, pass: result.stdout.length >= assertion.min_chars };
+
+  if (current.length > 0) {
+    result.push(current);
   }
-  if ("max_lines" in assertion) {
-    return { assertion, pass: normalizeLineCount(result.stdout) <= assertion.max_lines };
-  }
-  if ("min_lines" in assertion) {
-    return { assertion, pass: normalizeLineCount(result.stdout) >= assertion.min_lines };
-  }
-  if ("matches_regex" in assertion) {
-    return { assertion, pass: new RegExp(assertion.matches_regex).test(result.stdout) };
-  }
-  if ("exit_code" in assertion) {
-    return { assertion, pass: result.exitCode === assertion.exit_code };
-  }
-  if ("stderr_empty" in assertion) {
-    return { assertion, pass: assertion.stderr_empty === false ? result.stderr.length > 0 : result.stderr.trim().length === 0 };
-  }
-  return undefined;
+
+  return result;
 }
 
-function describeAssertion(assertion: Assertion): string {
-  return JSON.stringify(assertion);
-}
+function parseArgs(program: LoadedProgram, args: string): ParsedArgs {
+  const tokens = splitArgs(args);
+  const providedParams: Record<string, ParamValue> = {};
+  const positionals: string[] = [];
 
-function stripJsonFence(output: string): string {
-  const trimmed = output.trim();
-  if (trimmed.startsWith("```")) {
-    const withoutFirstFence = trimmed.replace(/^```[a-zA-Z0-9_-]*\n/, "");
-    return withoutFirstFence.replace(/\n```$/, "").trim();
+  for (let index = 0; index < tokens.length; index += 1) {
+    const arg = tokens[index]!;
+
+    if (arg === "--") {
+      positionals.push(...tokens.slice(index + 1));
+      break;
+    }
+
+    if (!arg.startsWith("--")) {
+      positionals.push(arg);
+      continue;
+    }
+
+    const eqIndex = arg.indexOf("=");
+    const name = eqIndex === -1 ? arg.slice(2) : arg.slice(2, eqIndex);
+    const inlineValue = eqIndex === -1 ? undefined : arg.slice(eqIndex + 1);
+    const paramConfig = program.config.params[name];
+    if (!paramConfig) {
+      throw new LmxError(`Unknown bench arg for ${program.config.name}: --${name}`, EXIT_USAGE);
+    }
+
+    const nextValue = inlineValue ?? tokens[index + 1];
+    const consumeNext = inlineValue === undefined;
+
+    if (paramConfig.type === "boolean" && inlineValue === undefined && (!nextValue || nextValue.startsWith("--") || !isBooleanLike(nextValue))) {
+      providedParams[name] = true;
+      continue;
+    }
+
+    if (nextValue === undefined) {
+      throw new LmxError(`--${name} requires a value`, EXIT_USAGE);
+    }
+
+    providedParams[name] = nextValue;
+    if (consumeNext) {
+      index += 1;
+    }
   }
-  return trimmed;
+
+  return { providedParams, positionals };
 }
 
-async function evaluateJudgeAssertions(
-  runtime: RuntimeConfig,
-  input: string,
-  output: string,
-  assertions: Assertion[],
-): Promise<SingleAssertionResult[]> {
-  const judgeDir = await resolveProgramDir("judge", runtime);
-  const judgeProgram = await loadProgram(judgeDir);
-  const judgeInput = JSON.stringify(
-    {
-      input,
-      candidate_output: output,
-      assertions,
-    },
-    null,
-    2,
+function combineInput(positionals: string[], stdin: string): string {
+  const parts: string[] = [];
+  if (positionals.length > 0) {
+    parts.push(positionals.join(" "));
+  }
+  if (stdin.length > 0) {
+    parts.push(stdin);
+  }
+  return parts.join("\n\n");
+}
+
+async function collectYamlFiles(dir: string): Promise<string[]> {
+  const entries = await readdir(dir, { withFileTypes: true });
+  const files: string[] = [];
+
+  for (const entry of entries) {
+    const entryPath = path.join(dir, entry.name);
+    if (entry.isDirectory()) {
+      files.push(...(await collectYamlFiles(entryPath)));
+      continue;
+    }
+
+    if (entry.isFile() && /\.ya?ml$/i.test(entry.name)) {
+      files.push(entryPath);
+    }
+  }
+
+  return files.sort();
+}
+
+async function loadBenchCases(program: LoadedProgram): Promise<LoadedBenchCase[]> {
+  const casesDir = path.join(program.dir, "bench", "cases");
+  if (!(await pathExists(casesDir))) {
+    throw new LmxError(`Missing bench/cases in ${program.dir}`, EXIT_USAGE);
+  }
+
+  const files = await collectYamlFiles(casesDir);
+  if (files.length === 0) {
+    throw new LmxError(`No bench cases found in ${casesDir}`, EXIT_USAGE);
+  }
+
+  return Promise.all(
+    files.map(async (filePath) => {
+      const parsed = parseYamlFile<unknown>(await readFile(filePath, "utf8"), filePath);
+      const relativeName = path.relative(casesDir, filePath).replace(/\\/g, "/").replace(/\.ya?ml$/i, "");
+      return {
+        name: relativeName,
+        case: benchCaseSchema.parse(parsed),
+      };
+    }),
   );
+}
+
+function exampleParam(examples: string[]): string | undefined {
+  return examples.length > 0 ? examples.join("\n\n") : undefined;
+}
+
+async function evaluateRubric(
+  judgeProgram: LoadedProgram,
+  runtime: RuntimeConfig,
+  context: string,
+  candidate: string,
+  rubric: Rubric,
+): Promise<RubricOutcome> {
+  const providedParams: Record<string, ParamValue> = {};
+  if (context.length > 0) {
+    providedParams.context = context;
+  }
+
+  const positiveExample = exampleParam(rubric.positive_examples);
+  if (positiveExample) {
+    providedParams["positive-example"] = positiveExample;
+  }
+
+  const negativeExample = exampleParam(rubric.negative_examples);
+  if (negativeExample) {
+    providedParams["negative-example"] = negativeExample;
+  }
 
   const execution = await executeProgram(judgeProgram, runtime, {
     modelOverride: runtime.raw.judge_model,
-    input: judgeInput,
+    input: `${rubric.rubric}\n\n${candidate}`,
+    providedParams,
   });
 
   if (execution.exitCode !== 0) {
-    throw new LmxError(`Judge failed: ${execution.stderr || "unknown error"}`, EXIT_RUNTIME);
+    return { verdict: "ERROR", error: execution.stderr || `judge exited ${execution.exitCode}` };
   }
 
-  const parsed = JSON.parse(stripJsonFence(execution.stdout)) as JudgeResponse;
-  const resultsByAssertion = new Map(parsed.results.map((item) => [item.assertion, item]));
-
-  return assertions.map((assertion) => {
-    const description = describeAssertion(assertion);
-    const result = resultsByAssertion.get(description);
-    if (!result) {
-      return {
-        assertion,
-        pass: false,
-        reason: "judge did not return a result for this assertion",
-      };
-    }
-
-    return {
-      assertion,
-      pass: result.pass,
-      reason: result.reason,
-    };
-  });
-}
-
-async function loadBench(program: LoadedProgram): Promise<BenchConfig> {
-  const benchPath = path.join(program.dir, "bench", "bench.yaml");
-  if (!(await pathExists(benchPath))) {
-    throw new LmxError(`Missing bench/bench.yaml in ${program.dir}`, EXIT_USAGE);
+  const verdict = execution.stdout.trim();
+  if (verdict !== "MET" && verdict !== "UNMET") {
+    return { verdict: "ERROR", error: `judge returned ${JSON.stringify(execution.stdout)}` };
   }
 
-  const parsed = parseYamlFile<unknown>(await readFile(benchPath, "utf8"), benchPath);
-  return benchConfigSchema.parse(parsed);
-}
-
-function splitAssertions(assertions: Assertion[]): { deterministic: Assertion[]; llm: Assertion[] } {
-  const deterministic: Assertion[] = [];
-  const llm: Assertion[] = [];
-
-  for (const assertion of assertions) {
-    if ("sentiment" in assertion || "topic_relevant" in assertion || "factual_to_input" in assertion || "language" in assertion) {
-      llm.push(assertion);
-    } else {
-      deterministic.push(assertion);
-    }
-  }
-
-  return { deterministic, llm };
+  return { verdict };
 }
 
 export async function runBench(programRef: string, runtime: RuntimeConfig, options: BenchCommandOptions): Promise<string> {
   const programDir = await resolveProgramDir(programRef, runtime);
   const program = await loadProgram(programDir);
-  const bench = await loadBench(program);
+  const benchCases = await loadBenchCases(program);
+  const judgeProgram = await loadProgram(await resolveProgramDir("judge", runtime));
   const resultsDir = path.join(program.dir, "bench", "results");
   await mkdir(resultsDir, { recursive: true });
 
-  const runs = bench.runs ?? runtime.raw.bench_runs ?? 3;
+  const runs = runtime.raw.bench_runs ?? 3;
   const modelRef = options.modelOverride ?? program.config.default_model ?? runtime.raw.default_model;
   if (!modelRef) {
     throw new LmxError("Bench requires a candidate model via program default_model, config default_model, or --model.", EXIT_USAGE);
   }
 
-  const testResults: Record<string, { pass_rate: number; avg_latency_ms: number; scores: number[] }> = {};
+  const caseResults: Record<string, unknown> = {};
   let totalRunCount = 0;
   let totalPassedRuns = 0;
   let totalScore = 0;
 
-  for (const test of bench.tests) {
-    const input = test.input_file
-      ? await readFile(path.resolve(program.dir, test.input_file), "utf8")
-      : test.input ?? "";
-
+  for (const benchCase of benchCases) {
+    const parsedArgs = parseArgs(program, benchCase.case.args);
+    const input = combineInput(parsedArgs.positionals, benchCase.case.input);
     const scores: number[] = [];
     const latencies: number[] = [];
+    const rubricResults = benchCase.case.rubrics.map((rubric) => ({
+      rubric: rubric.rubric,
+      verdicts: [] as string[],
+      errors: [] as string[],
+    }));
 
     for (let index = 0; index < runs; index += 1) {
       const startedAt = Date.now();
       const execution = await executeProgram(program, runtime, {
         modelOverride: modelRef,
         input,
-        providedParams: test.params,
+        providedParams: parsedArgs.providedParams,
       });
       latencies.push(Date.now() - startedAt);
 
-      const { deterministic, llm } = splitAssertions(test.assert);
-      const assertionResults: SingleAssertionResult[] = [];
+      if (execution.exitCode !== 0) {
+        for (const result of rubricResults) {
+          result.verdicts.push("ERROR");
+          result.errors.push(execution.stderr || `program exited ${execution.exitCode}`);
+        }
+        scores.push(0);
+        totalRunCount += 1;
+        continue;
+      }
 
-      for (const assertion of deterministic) {
-        const result = evaluateDeterministicAssertion(assertion, execution);
-        if (result) {
-          assertionResults.push(result);
+      let passedRubrics = 0;
+      for (const [rubricIndex, rubric] of benchCase.case.rubrics.entries()) {
+        const outcome = await evaluateRubric(judgeProgram, runtime, input, execution.stdout, rubric);
+        const result = rubricResults[rubricIndex]!;
+        result.verdicts.push(outcome.verdict);
+        if (outcome.error) {
+          result.errors.push(outcome.error);
+        }
+        if (outcome.verdict === "MET") {
+          passedRubrics += 1;
         }
       }
 
-      if (llm.length > 0) {
-        assertionResults.push(...(await evaluateJudgeAssertions(runtime, input, execution.stdout, llm)));
-      }
-
-      const passed = assertionResults.filter((item) => item.pass).length;
-      const score = assertionResults.length === 0 ? 0 : passed / assertionResults.length;
+      const score = passedRubrics / benchCase.case.rubrics.length;
       scores.push(score);
       totalRunCount += 1;
       totalScore += score;
@@ -217,10 +307,16 @@ export async function runBench(programRef: string, runtime: RuntimeConfig, optio
       }
     }
 
-    testResults[test.name] = {
+    caseResults[benchCase.name] = {
       pass_rate: scores.filter((score) => score === 1).length / scores.length,
       avg_latency_ms: Math.round(latencies.reduce((sum, value) => sum + value, 0) / latencies.length),
       scores,
+      rubrics: rubricResults.map((result) => ({
+        rubric: result.rubric,
+        verdicts: result.verdicts,
+        pass_rate: result.verdicts.filter((verdict) => verdict === "MET").length / result.verdicts.length,
+        errors: result.errors,
+      })),
     };
   }
 
@@ -230,7 +326,7 @@ export async function runBench(programRef: string, runtime: RuntimeConfig, optio
     model: modelRef,
     timestamp: new Date().toISOString(),
     runs,
-    tests: testResults,
+    cases: caseResults,
     overall: {
       pass_rate: totalRunCount === 0 ? 0 : totalPassedRuns / totalRunCount,
       score: totalRunCount === 0 ? 0 : totalScore / totalRunCount,

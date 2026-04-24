@@ -7,16 +7,6 @@ tools:
   - "none"
 params:
   labels:
-    description: "Comma-separated list of allowed labels"
+    description: "Allowed labels, separated by commas"
     type: "string"
-    default: "positive,negative,neutral"
-  format:
-    description: "Output format"
-    type: "string"
-    enum:
-      - "label"
-      - "json"
-    default: "label"
-  instructions:
-    description: "Additional classification instructions"
-    type: "string"
+    required: true

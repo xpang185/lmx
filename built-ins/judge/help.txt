@@ -1,11 +1,17 @@
-judge - Evaluate candidate outputs against benchmark assertions
+judge - Evaluate a candidate against a rubric
 
 Usage: judge [OPTIONS] [INPUT]
 
 Input can be provided as an argument or piped via stdin.
 
 Options:
+  --context <string>    Optional source material
+  --positive-example <string>    Example of a candidate that should be MET
+  --negative-example <string>    Example of a candidate that should be UNMET
   --model <provider/id>   Override the LLM model
   --temperature <float>   Override temperature
   --verbose               Show runner diagnostics on stderr
   --help                  Show this help text
+
+Tested models:
+  openai-codex/gpt-5.4   score: 1.00 (recommended)

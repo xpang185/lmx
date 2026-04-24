@@ -6,18 +6,6 @@ min_bench_score: 0.8
 tools:
   - "none"
 params:
-  max-chars:
-    description: "Maximum characters in the summary output"
-    type: "number"
-    default: 500
-  format:
-    description: "Output format"
-    type: "string"
-    enum:
-      - "paragraph"
-      - "bullets"
-      - "oneliner"
-    default: "paragraph"
   instructions:
     description: "Additional instructions for the summarization"
     type: "string"

@@ -1,7 +1,16 @@
 name: "judge"
-description: "Evaluate candidate outputs against benchmark assertions"
+description: "Evaluate a candidate against a rubric"
 version: "0.1.0"
 default_model: "openai-codex/gpt-5.4"
 tools:
   - "none"
-params: {}
+params:
+  context:
+    description: "Optional source material"
+    type: "string"
+  positive-example:
+    description: "Example of a candidate that should be MET"
+    type: "string"
+  negative-example:
+    description: "Example of a candidate that should be UNMET"
+    type: "string"
