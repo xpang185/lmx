@@ -1,8 +1,18 @@
 {
-  "name": "lmx",
+  "name": "@xpang/lmx",
   "version": "0.1.0",
   "description": "LLM executables powered by Pi",
   "type": "module",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/xpang185/lmx.git"
+  },
+  "files": [
+    "dist"
+  ],
+  "publishConfig": {
+    "access": "public"
+  },
   "bin": {
     "lmx": "./dist/cli.js",
     "judge": "./dist/built-ins/judge/_run.js",

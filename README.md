@@ -25,6 +25,13 @@ npm run build
 npm link
 ```
 
+## Install
+
+```bash
+npm install -g @xpang/lmx
+lmx --help
+```
+
 ## Run
 
 ```bash
@@ -43,7 +50,6 @@ After `npm link`, npm exposes `lmx` plus the bundled built-ins (`judge`, `summar
 
 ## Notes
 
-- npm publishing: TBD
 - install pipeline: TBD
 - On Windows, Pi requires bash, so install Git Bash.
 - `lmx build` validates the program and regenerates `_help.txt` plus the program `_run.js` npm entrypoint.
