@@ -254,6 +254,17 @@ Options:
 - `--model <provider/id>` - override the LLM model
 - `--temperature <float>` - override temperature
 
+Help text shows the rubric as a required argument and candidate as optional
+argument/stdin input:
+
+```text
+Usage: judge [OPTIONS] <rubric> [CANDIDATE]
+
+Arguments:
+  <rubric>      Rubric the candidate must satisfy
+  [CANDIDATE]   Candidate text, or pipe candidate via stdin
+```
+
 Output:
 
 - `stdout`: exactly `MET` or `UNMET`

@@ -42,21 +42,39 @@ export async function generateHelpText(programDir: string, config: ProgramConfig
   const positionalUsage = config.positionals.map((param) => (param.required ? `<${param.name}>` : `[${param.name}]`));
   const usageParts = [config.name, "[OPTIONS]", ...positionalUsage, inputUsage];
   const inputDescription = config.input.description ?? "Input";
+  const hasArguments = config.positionals.length > 0;
 
   lines.push(`${config.name} - ${config.description}`);
   lines.push("");
   lines.push(`Usage: ${usageParts.join(" ")}`);
   lines.push("");
-  lines.push(`${inputDescription} can be provided as an argument or piped via stdin.`);
+  lines.push(
+    hasArguments
+      ? `${inputDescription} can be provided as ${inputUsage} or piped via stdin.`
+      : `${inputDescription} can be provided as an argument or piped via stdin.`,
+  );
   lines.push("");
 
-  if (config.positionals.length > 0) {
-    lines.push("Arguments:");
-    for (const param of config.positionals) {
+  if (hasArguments) {
+    const argumentRows = config.positionals.map((param) => {
+      const label = param.required ? `<${param.name}>` : `[${param.name}]`;
       const typeText = param.type === "string" ? "" : ` (${param.type})`;
       const enumText = param.enum?.length ? ` Options: ${param.enum.join(", ")}.` : "";
       const defaultText = param.default !== undefined ? ` (default: ${String(param.default)})` : "";
-      lines.push(`  <${param.name}>    ${param.description}${typeText}${enumText}${defaultText}`);
+      return {
+        label,
+        description: `${param.description}${typeText}${enumText}${defaultText}`,
+      };
+    });
+    argumentRows.push({
+      label: inputUsage,
+      description: `${inputDescription}, or pipe ${inputLabel} via stdin`,
+    });
+    const labelWidth = Math.max(...argumentRows.map((row) => row.label.length));
+
+    lines.push("Arguments:");
+    for (const row of argumentRows) {
+      lines.push(`  ${row.label.padEnd(labelWidth)}   ${row.description}`);
     }
     lines.push("");
   }
