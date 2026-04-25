@@ -3,13 +3,12 @@ import path from "node:path";
 
 import { LmxError, EXIT_USAGE } from "./errors.js";
 import type { RuntimeConfig } from "./global-config.js";
+import { assignPositionalParams, combineInput, type ParamValue } from "./invocation.js";
 import { loadProgram, resolveProgramDir, type LoadedProgram } from "./program.js";
 import { executeProgram } from "./run-program.js";
 import { benchCaseSchema, type BenchCase, type Rubric } from "./schemas.js";
 import { pathExists } from "./paths.js";
 import { parseYamlFile, stringifyYaml } from "./yaml.js";
-
-type ParamValue = string | number | boolean;
 
 export interface BenchCommandOptions {
   modelOverride?: string;
@@ -136,18 +135,11 @@ function parseArgs(program: LoadedProgram, args: string): ParsedArgs {
     }
   }
 
-  return { providedParams, positionals };
-}
-
-function combineInput(positionals: string[], stdin: string): string {
-  const parts: string[] = [];
-  if (positionals.length > 0) {
-    parts.push(positionals.join(" "));
-  }
-  if (stdin.length > 0) {
-    parts.push(stdin);
-  }
-  return parts.join("\n\n");
+  const assigned = assignPositionalParams(program, positionals);
+  return {
+    providedParams: { ...providedParams, ...assigned.providedParams },
+    positionals: assigned.inputPositionals,
+  };
 }
 
 async function collectYamlFiles(dir: string): Promise<string[]> {
@@ -207,6 +199,7 @@ async function evaluateRubric(
   if (context.length > 0) {
     providedParams.context = context;
   }
+  providedParams.rubric = rubric.rubric;
 
   const positiveExample = exampleParam(rubric.positive_examples);
   if (positiveExample) {
@@ -220,7 +213,7 @@ async function evaluateRubric(
 
   const execution = await executeProgram(judgeProgram, runtime, {
     modelOverride: runtime.raw.judge_model,
-    input: `${rubric.rubric}\n\n${candidate}`,
+    input: candidate,
     providedParams,
   });
 

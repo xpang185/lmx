@@ -2,6 +2,7 @@ import { readFile } from "node:fs/promises";
 
 import { LmxError, EXIT_USAGE } from "../lib/errors.js";
 import { readStdinIfPresent, writeStderr } from "../lib/io.js";
+import { assignPositionalParams, combineInput } from "../lib/invocation.js";
 import { buildProgram, createRuntime, loadProgram, resolveProgramDir } from "../lib/program.js";
 import { executeProgram } from "../lib/run-program.js";
 
@@ -99,15 +100,10 @@ export async function runNamedProgramCommand(programRef: string, invocationArgs:
   }
 
   const stdin = await readStdinIfPresent();
-  const parts = [];
-  if (positionals.length > 0) {
-    parts.push(positionals.join(" "));
-  }
-  if (stdin && stdin.length > 0) {
-    parts.push(stdin);
-  }
-  const input = parts.join("\n\n");
-  if (parts.length === 0) {
+  const assigned = assignPositionalParams(program, positionals);
+  Object.assign(providedParams, assigned.providedParams);
+  const input = combineInput(assigned.inputPositionals, stdin ?? "");
+  if (input.length === 0) {
     throw new LmxError("Missing input. Provide text as an argument or via stdin.", EXIT_USAGE);
   }
 

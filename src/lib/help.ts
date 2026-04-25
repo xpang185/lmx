@@ -37,12 +37,30 @@ async function loadBenchSummaries(programDir: string): Promise<BenchSummary[]> {
 
 export async function generateHelpText(programDir: string, config: ProgramConfig): Promise<string> {
   const lines: string[] = [];
+  const inputLabel = config.input.label ?? "input";
+  const inputUsage = `[${inputLabel.toUpperCase()}]`;
+  const positionalUsage = config.positionals.map((param) => (param.required ? `<${param.name}>` : `[${param.name}]`));
+  const usageParts = [config.name, "[OPTIONS]", ...positionalUsage, inputUsage];
+  const inputDescription = config.input.description ?? "Input";
+
   lines.push(`${config.name} - ${config.description}`);
   lines.push("");
-  lines.push(`Usage: ${config.name} [OPTIONS] [INPUT]`);
+  lines.push(`Usage: ${usageParts.join(" ")}`);
   lines.push("");
-  lines.push("Input can be provided as an argument or piped via stdin.");
+  lines.push(`${inputDescription} can be provided as an argument or piped via stdin.`);
   lines.push("");
+
+  if (config.positionals.length > 0) {
+    lines.push("Arguments:");
+    for (const param of config.positionals) {
+      const typeText = param.type === "string" ? "" : ` (${param.type})`;
+      const enumText = param.enum?.length ? ` Options: ${param.enum.join(", ")}.` : "";
+      const defaultText = param.default !== undefined ? ` (default: ${String(param.default)})` : "";
+      lines.push(`  <${param.name}>    ${param.description}${typeText}${enumText}${defaultText}`);
+    }
+    lines.push("");
+  }
+
   lines.push("Options:");
 
   for (const [name, param] of Object.entries(config.params)) {

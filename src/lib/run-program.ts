@@ -2,10 +2,9 @@ import { AuthStorage, createAgentSession, DefaultResourceLoader, getAgentDir, Mo
 
 import type { RuntimeConfig } from "./global-config.js";
 import { LmxError, EXIT_RUNTIME, EXIT_USAGE } from "./errors.js";
+import { getParamEntries, type ParamValue } from "./invocation.js";
 import type { LoadedProgram } from "./program.js";
 import type { ParamConfig } from "./schemas.js";
-
-type ParamValue = string | number | boolean;
 
 export interface EffectiveParam {
   config: ParamConfig;
@@ -93,14 +92,16 @@ export function resolveEffectiveParams(
   providedParams: Record<string, ParamValue> = {},
 ): Record<string, EffectiveParam> {
   const effective: Record<string, EffectiveParam> = {};
+  const paramEntries = getParamEntries(program);
+  const paramConfigs = new Map(paramEntries.map((entry) => [entry.name, entry]));
 
   for (const providedKey of Object.keys(providedParams)) {
-    if (!program.config.params[providedKey]) {
+    if (!paramConfigs.has(providedKey)) {
       throw new LmxError(`Unknown option: --${providedKey}`, EXIT_USAGE);
     }
   }
 
-  for (const [name, config] of Object.entries(program.config.params)) {
+  for (const { name, config, kind } of paramEntries) {
     if (Object.prototype.hasOwnProperty.call(providedParams, name)) {
       const value = parseValueForParam(name, config, providedParams[name]!);
       validateEnum(name, config, value);
@@ -118,7 +119,8 @@ export function resolveEffectiveParams(
     }
 
     if (config.required) {
-      throw new LmxError(`Missing required option: --${name}`, EXIT_USAGE);
+      const label = kind === "argument" ? `argument: <${name}>` : `option: --${name}`;
+      throw new LmxError(`Missing required ${label}`, EXIT_USAGE);
     }
   }
 

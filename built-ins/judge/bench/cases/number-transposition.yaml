@@ -1,8 +1,6 @@
 input: |
-  all numbers match the source
-
   Revenue reached $874M in Q3, up from $812M.
-args: "--context \"The company reported Q3 revenue of $847M, up from $812M in Q2.\""
+args: "\"all numbers match the source\" --context \"The company reported Q3 revenue of $847M, up from $812M in Q2.\""
 
 rubrics:
   - rubric: "the output is exactly the string UNMET"

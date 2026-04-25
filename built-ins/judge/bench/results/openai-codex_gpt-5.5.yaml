@@ -1,10 +1,10 @@
 "model": "openai-codex/gpt-5.5"
-"timestamp": "2026-04-24T17:55:48.771Z"
+"timestamp": "2026-04-25T01:34:05.195Z"
 "runs": 3
 "cases":
   "number-transposition":
     "pass_rate": 1
-    "avg_latency_ms": 5182
+    "avg_latency_ms": 2608
     "scores":
       - 1
       - 1

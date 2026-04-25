@@ -61,7 +61,9 @@ classify --labels "bug,feature,question" "Add dark mode"
 Evaluate a candidate against a rubric. Output is `MET` or `UNMET`.
 
 ```bash
+judge "The candidate must be concise." "Short and accurate."
 echo "Short and accurate." | judge "The candidate must be concise."
+summarize < README.md | judge "The summary must mention installation."
 ```
 
 ## CLI

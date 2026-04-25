@@ -1,8 +1,11 @@
 judge - Evaluate a candidate against a rubric
 
-Usage: judge [OPTIONS] [INPUT]
+Usage: judge [OPTIONS] <rubric> [CANDIDATE]
 
-Input can be provided as an argument or piped via stdin.
+Candidate text can be provided as an argument or piped via stdin.
+
+Arguments:
+  <rubric>    Rubric the candidate must satisfy
 
 Options:
   --context <string>    Optional source material

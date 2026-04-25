@@ -145,6 +145,8 @@ export async function createProgram(name: string, runtime: RuntimeConfig): Promi
     description: `Describe what ${name} does`,
     version: "0.1.0",
     default_model: runtime.raw.default_model,
+    input: {},
+    positionals: [],
     tools: ["none"],
     params: {
       instructions: {

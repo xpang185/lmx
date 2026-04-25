@@ -2,6 +2,14 @@ name: "judge"
 description: "Evaluate a candidate against a rubric"
 version: "0.1.0"
 default_model: "openai-codex/gpt-5.5"
+input:
+  label: "candidate"
+  description: "Candidate text"
+positionals:
+  - name: "rubric"
+    description: "Rubric the candidate must satisfy"
+    type: "string"
+    required: true
 tools:
   - "none"
 params:

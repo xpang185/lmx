@@ -2,52 +2,68 @@ import { z } from "zod";
 
 const paramDefaultSchema = z.union([z.string(), z.number(), z.boolean()]);
 
-const paramConfigSchema = z
-  .object({
-    description: z.string().min(1),
-    type: z.enum(["string", "number", "boolean"]),
-    default: paramDefaultSchema.optional(),
-    enum: z.array(z.union([z.string(), z.number()])).optional(),
-    required: z.boolean().optional(),
-  })
-  .superRefine((value, ctx) => {
-    if (value.default !== undefined && typeof value.default !== value.type) {
+const paramConfigBaseSchema = z.object({
+  description: z.string().min(1),
+  type: z.enum(["string", "number", "boolean"]),
+  default: paramDefaultSchema.optional(),
+  enum: z.array(z.union([z.string(), z.number()])).optional(),
+  required: z.boolean().optional(),
+});
+
+function validateParamConfig(value: z.infer<typeof paramConfigBaseSchema>, ctx: z.RefinementCtx): void {
+  if (value.default !== undefined && typeof value.default !== value.type) {
+    ctx.addIssue({
+      code: z.ZodIssueCode.custom,
+      message: `default must match declared type ${value.type}`,
+      path: ["default"],
+    });
+  }
+
+  if (value.enum && value.type === "boolean") {
+    ctx.addIssue({
+      code: z.ZodIssueCode.custom,
+      message: "enum is not supported for boolean params",
+      path: ["enum"],
+    });
+  }
+
+  if (value.enum) {
+    for (const option of value.enum) {
+      if (typeof option !== value.type) {
+        ctx.addIssue({
+          code: z.ZodIssueCode.custom,
+          message: `enum values must match declared type ${value.type}`,
+          path: ["enum"],
+        });
+        break;
+      }
+    }
+
+    if (value.default !== undefined && !value.enum.some((option) => option === value.default)) {
       ctx.addIssue({
         code: z.ZodIssueCode.custom,
-        message: `default must match declared type ${value.type}`,
+        message: "default must be present in enum",
         path: ["default"],
       });
     }
+  }
+}
 
-    if (value.enum && value.type === "boolean") {
-      ctx.addIssue({
-        code: z.ZodIssueCode.custom,
-        message: "enum is not supported for boolean params",
-        path: ["enum"],
-      });
-    }
+const paramConfigSchema = paramConfigBaseSchema.superRefine(validateParamConfig);
 
-    if (value.enum) {
-      for (const option of value.enum) {
-        if (typeof option !== value.type) {
-          ctx.addIssue({
-            code: z.ZodIssueCode.custom,
-            message: `enum values must match declared type ${value.type}`,
-            path: ["enum"],
-          });
-          break;
-        }
-      }
+const positionalParamConfigSchema = paramConfigBaseSchema
+  .extend({
+    name: z.string().min(1),
+  })
+  .superRefine(validateParamConfig);
 
-      if (value.default !== undefined && !value.enum.some((option) => option === value.default)) {
-        ctx.addIssue({
-          code: z.ZodIssueCode.custom,
-          message: "default must be present in enum",
-          path: ["default"],
-        });
-      }
-    }
-  });
+const inputConfigSchema = z
+  .object({
+    label: z.string().min(1).optional(),
+    description: z.string().min(1).optional(),
+  })
+  .optional()
+  .default({});
 
 export const programConfigSchema = z
   .object({
@@ -56,6 +72,8 @@ export const programConfigSchema = z
     version: z.string().min(1),
     default_model: z.string().optional(),
     min_bench_score: z.number().min(0).max(1).optional(),
+    input: inputConfigSchema,
+    positionals: z.array(positionalParamConfigSchema).optional().default([]),
     tools: z.array(z.enum(["bash", "read", "none"])).optional().default(["none"]),
     params: z.record(z.string(), paramConfigSchema).optional().default({}),
   })
@@ -66,6 +84,26 @@ export const programConfigSchema = z
         message: "`none` cannot be combined with other tools",
         path: ["tools"],
       });
+    }
+
+    const positionalNames = new Set<string>();
+    for (const [index, positional] of value.positionals.entries()) {
+      if (positionalNames.has(positional.name)) {
+        ctx.addIssue({
+          code: z.ZodIssueCode.custom,
+          message: `duplicate positional argument: ${positional.name}`,
+          path: ["positionals", index, "name"],
+        });
+      }
+      positionalNames.add(positional.name);
+
+      if (Object.prototype.hasOwnProperty.call(value.params, positional.name)) {
+        ctx.addIssue({
+          code: z.ZodIssueCode.custom,
+          message: `positional argument conflicts with option: ${positional.name}`,
+          path: ["positionals", index, "name"],
+        });
+      }
     }
   });
 
