@@ -21,6 +21,7 @@ Requirements:
 
 ```bash
 summarize "LMX turns prompts into normal command-line tools."
+summarize < README.md
 ```
 
 ```bash
@@ -28,7 +29,8 @@ echo "The payment page crashes after submit" | classify --labels "bug,feature,qu
 ```
 
 ```bash
-echo "The answer includes the correct total." | judge "The candidate must mention the total."
+summarize < README.md | judge "contains all the built-ins"
+summarize < README.md | judge "contains npm install instructions"
 ```
 
 Built-ins default to `openai-codex/gpt-5.5`. Override the model when needed:
