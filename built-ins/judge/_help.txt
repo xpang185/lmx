@@ -9,7 +9,7 @@ Arguments:
   [CANDIDATE]   Candidate text, or pipe candidate via stdin
 
 Options:
-  --context <string>    Optional source material
+  --context <string>    Source material to consider while judging
   --positive-example <string>    Example of a candidate that should be MET
   --negative-example <string>    Example of a candidate that should be UNMET
   --model <provider/id>   Override the LLM model

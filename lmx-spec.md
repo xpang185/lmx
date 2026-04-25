@@ -248,7 +248,7 @@ summarize < README.md | judge "$rubric"
 
 Options:
 
-- `--context <text>` - optional source material
+- `--context <text>` - source material to consider while judging
 - `--positive-example <text>` - example of a `MET` candidate
 - `--negative-example <text>` - example of an `UNMET` candidate
 - `--model <provider/id>` - override the LLM model

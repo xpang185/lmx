@@ -14,7 +14,7 @@ tools:
   - "none"
 params:
   context:
-    description: "Optional source material"
+    description: "Source material to consider while judging"
     type: "string"
   positive-example:
     description: "Example of a candidate that should be MET"
