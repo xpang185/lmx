@@ -1,3 +1,6 @@
+import { readFile } from "node:fs/promises";
+import path from "node:path";
+
 import { LmxError, EXIT_USAGE } from "./errors.js";
 import type { LoadedProgram } from "./program.js";
 import type { ParamConfig } from "./schemas.js";
@@ -60,4 +63,40 @@ export function combineInput(positionals: string[], stdin: string): string {
     parts.push(stdin);
   }
   return parts.join("\n\n");
+}
+
+export async function expandAtFileReference(value: string, cwd: string): Promise<string> {
+  if (value.startsWith("@@")) {
+    return value.slice(1);
+  }
+
+  if (!value.startsWith("@")) {
+    return value;
+  }
+
+  const fileRef = value.slice(1);
+  if (fileRef.length === 0) {
+    throw new LmxError("Empty @file reference", EXIT_USAGE);
+  }
+
+  const filePath = path.resolve(cwd, fileRef);
+  try {
+    return await readFile(filePath, "utf8");
+  } catch (error) {
+    const message = error instanceof Error ? error.message : String(error);
+    throw new LmxError(`Unable to read @file reference ${value}: ${message}`, EXIT_USAGE);
+  }
+}
+
+export async function expandAtFileReferences(
+  values: Record<string, ParamValue>,
+  cwd: string,
+): Promise<Record<string, ParamValue>> {
+  const expanded: Record<string, ParamValue> = {};
+
+  for (const [name, value] of Object.entries(values)) {
+    expanded[name] = typeof value === "string" ? await expandAtFileReference(value, cwd) : value;
+  }
+
+  return expanded;
 }

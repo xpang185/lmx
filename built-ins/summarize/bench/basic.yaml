@@ -1,0 +1,8 @@
+- bash: summarize @basic-input.txt --instructions brief
+  rubrics:
+    - rubric: "the output captures the revenue change and headcount"
+      context: "@basic-input.txt"
+      positive_examples:
+        - "Q3 revenue was $847M, up from $812M in Q2, with headcount at 12,400."
+      negative_examples:
+        - "The company reported growth."

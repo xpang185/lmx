@@ -109,15 +109,17 @@ export const programConfigSchema = z
 
 export const rubricSchema = z.object({
   rubric: z.string().min(1),
+  context: z.string().min(1),
   positive_examples: z.array(z.string()).optional().default([]),
   negative_examples: z.array(z.string()).optional().default([]),
 });
 
-export const benchCaseSchema = z.object({
-  input: z.string().default(""),
-  args: z.string().optional().default(""),
+export const benchJobSchema = z.object({
+  bash: z.string().min(1),
   rubrics: z.array(rubricSchema).min(1),
 });
+
+export const benchCapabilitySchema = z.array(benchJobSchema).min(1);
 
 export const globalConfigSchema = z.object({
   default_model: z.string().optional(),
@@ -129,6 +131,6 @@ export const globalConfigSchema = z.object({
 
 export type ProgramConfig = z.infer<typeof programConfigSchema>;
 export type ParamConfig = z.infer<typeof paramConfigSchema>;
-export type BenchCase = z.infer<typeof benchCaseSchema>;
+export type BenchJob = z.infer<typeof benchJobSchema>;
 export type Rubric = z.infer<typeof rubricSchema>;
 export type GlobalConfig = z.infer<typeof globalConfigSchema>;

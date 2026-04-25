@@ -1,0 +1,8 @@
+- bash: classify @positive.txt --labels positive,negative,neutral
+  rubrics:
+    - rubric: "the output is exactly the label positive"
+      context: "@positive.txt"
+      positive_examples:
+        - "positive"
+      negative_examples:
+        - "negative"

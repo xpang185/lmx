@@ -1,22 +1,27 @@
 "model": "openai-codex/gpt-5.5"
-"timestamp": "2026-04-24T17:55:10.389Z"
+"timestamp": "2026-04-25T06:58:15.244Z"
 "runs": 3
-"cases":
+"capabilities":
   "positive":
     "pass_rate": 1
-    "avg_latency_ms": 2341
-    "scores":
-      - 1
-      - 1
-      - 1
-    "rubrics":
-      - "rubric": "the output is exactly the label positive"
-        "verdicts":
-          - "MET"
-          - "MET"
-          - "MET"
+    "score": 1
+    "jobs":
+      "0":
+        "bash": "classify @positive.txt --labels positive,negative,neutral"
         "pass_rate": 1
-        "errors": []
+        "avg_latency_ms": 1959
+        "scores":
+          - 1
+          - 1
+          - 1
+        "rubrics":
+          - "rubric": "the output is exactly the label positive"
+            "verdicts":
+              - "MET"
+              - "MET"
+              - "MET"
+            "pass_rate": 1
+            "errors": []
 "overall":
   "pass_rate": 1
   "score": 1

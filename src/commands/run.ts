@@ -2,7 +2,7 @@ import { readFile } from "node:fs/promises";
 
 import { LmxError, EXIT_USAGE } from "../lib/errors.js";
 import { readStdinIfPresent, writeStderr } from "../lib/io.js";
-import { assignPositionalParams, combineInput } from "../lib/invocation.js";
+import { assignPositionalParams, combineInput, expandAtFileReference, expandAtFileReferences } from "../lib/invocation.js";
 import { buildProgram, createRuntime, loadProgram, resolveProgramDir } from "../lib/program.js";
 import { executeProgram } from "../lib/run-program.js";
 
@@ -100,8 +100,10 @@ export async function runNamedProgramCommand(programRef: string, invocationArgs:
   }
 
   const stdin = await readStdinIfPresent();
-  const assigned = assignPositionalParams(program, positionals);
-  Object.assign(providedParams, assigned.providedParams);
+  const expandedPositionals = await Promise.all(positionals.map((value) => expandAtFileReference(value, process.cwd())));
+  const expandedParams = await expandAtFileReferences(providedParams, process.cwd());
+  const assigned = assignPositionalParams(program, expandedPositionals);
+  Object.assign(expandedParams, assigned.providedParams);
   const input = combineInput(assigned.inputPositionals, stdin ?? "");
   if (input.length === 0) {
     throw new LmxError("Missing input. Provide text as an argument or via stdin.", EXIT_USAGE);
@@ -112,7 +114,7 @@ export async function runNamedProgramCommand(programRef: string, invocationArgs:
     temperature: runner.temperature,
     verbose: runner.verbose,
     input,
-    providedParams,
+    providedParams: expandedParams,
   });
 
   if (result.stdout) {

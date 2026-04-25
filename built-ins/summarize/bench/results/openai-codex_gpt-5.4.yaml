@@ -1,22 +1,27 @@
 "model": "openai-codex/gpt-5.4"
-"timestamp": "2026-04-24T00:50:07.599Z"
+"timestamp": "2026-04-25T07:00:04.661Z"
 "runs": 3
-"cases":
+"capabilities":
   "basic":
     "pass_rate": 1
-    "avg_latency_ms": 1989
-    "scores":
-      - 1
-      - 1
-      - 1
-    "rubrics":
-      - "rubric": "the output captures the revenue change and headcount"
-        "verdicts":
-          - "MET"
-          - "MET"
-          - "MET"
+    "score": 1
+    "jobs":
+      "0":
+        "bash": "summarize @basic-input.txt --instructions brief"
         "pass_rate": 1
-        "errors": []
+        "avg_latency_ms": 2467
+        "scores":
+          - 1
+          - 1
+          - 1
+        "rubrics":
+          - "rubric": "the output captures the revenue change and headcount"
+            "verdicts":
+              - "MET"
+              - "MET"
+              - "MET"
+            "pass_rate": 1
+            "errors": []
 "overall":
   "pass_rate": 1
   "score": 1

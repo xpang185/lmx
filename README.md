@@ -15,13 +15,14 @@ Requirements:
 
 - Node.js and npm
 - Pi auth already configured on the machine
-- Windows: Git Bash / Git for Windows, because Pi needs bash
+- Bash, including on Windows via Git Bash / Git for Windows
 
 ## Quick Start
 
 ```bash
 summarize "LMX turns prompts into normal command-line tools."
 summarize < README.md
+summarize @README.md
 ```
 
 ```bash
@@ -47,6 +48,7 @@ Summarize text from an argument or stdin.
 
 ```bash
 summarize "Long text..."
+summarize @article.txt
 echo "Long text..." | summarize --instructions "one sentence"
 ```
 
@@ -80,6 +82,8 @@ lmx list
 ```
 
 Most users call installed programs directly, such as `summarize`, instead of calling `lmx run`.
+
+String inputs and program parameters can use `@file.txt` to read UTF-8 text from a file relative to the current directory. Use `@@file.txt` when you need a literal leading `@`.
 
 ## What Is an LMX Program?
 

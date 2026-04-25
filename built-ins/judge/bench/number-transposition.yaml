@@ -1,0 +1,8 @@
+- bash: judge "all numbers match the source" @number-candidate.txt --context @number-source.txt
+  rubrics:
+    - rubric: "the output is exactly the string UNMET"
+      context: "The candidate should fail because it changes $847M to $874M."
+      positive_examples:
+        - "UNMET"
+      negative_examples:
+        - "MET"

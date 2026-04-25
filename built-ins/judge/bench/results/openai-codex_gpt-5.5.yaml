@@ -1,22 +1,27 @@
 "model": "openai-codex/gpt-5.5"
-"timestamp": "2026-04-25T01:34:05.195Z"
+"timestamp": "2026-04-25T06:58:36.110Z"
 "runs": 3
-"cases":
+"capabilities":
   "number-transposition":
     "pass_rate": 1
-    "avg_latency_ms": 2608
-    "scores":
-      - 1
-      - 1
-      - 1
-    "rubrics":
-      - "rubric": "the output is exactly the string UNMET"
-        "verdicts":
-          - "MET"
-          - "MET"
-          - "MET"
+    "score": 1
+    "jobs":
+      "0":
+        "bash": "judge \"all numbers match the source\" @number-candidate.txt --context @number-source.txt"
         "pass_rate": 1
-        "errors": []
+        "avg_latency_ms": 3840
+        "scores":
+          - 1
+          - 1
+          - 1
+        "rubrics":
+          - "rubric": "the output is exactly the string UNMET"
+            "verdicts":
+              - "MET"
+              - "MET"
+              - "MET"
+            "pass_rate": 1
+            "errors": []
 "overall":
   "pass_rate": 1
   "score": 1

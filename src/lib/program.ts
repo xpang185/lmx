@@ -136,7 +136,7 @@ export async function createProgram(name: string, runtime: RuntimeConfig): Promi
     throw new LmxError(`Program already exists: ${name}`, EXIT_USAGE);
   }
 
-  await mkdir(path.join(programDir, "bench", "cases"), { recursive: true });
+  await mkdir(path.join(programDir, "bench"), { recursive: true });
   await mkdir(path.join(programDir, "bench", "results"), { recursive: true });
   await mkdir(path.join(programDir, "scripts"), { recursive: true });
 
@@ -164,18 +164,21 @@ Read the Input section and produce only the command output.
 Do not add a preamble, explanation, or markdown fences unless the user explicitly asks for them in the input or parameters.
 `;
 
-  const benchCase = {
-    input: "replace this with a representative example input",
-    rubrics: [
-      {
-        rubric: "the output satisfies the program's intended behavior",
-      },
-    ],
-  };
+  const benchJobs = [
+    {
+      bash: `${name} "replace this with a representative example input"`,
+      rubrics: [
+        {
+          rubric: "the output satisfies the program's intended behavior",
+          context: "replace this with a representative example input",
+        },
+      ],
+    },
+  ];
 
   await writeFile(path.join(programDir, "config.yaml"), stringifyYaml(config), "utf8");
   await writeFile(path.join(programDir, "LMX.md"), prompt, "utf8");
-  await writeFile(path.join(programDir, "bench", "cases", "basic-smoke.yaml"), stringifyYaml(benchCase), "utf8");
+  await writeFile(path.join(programDir, "bench", "basic-smoke.yaml"), stringifyYaml(benchJobs), "utf8");
 
   await buildProgram(programDir);
   return programDir;
